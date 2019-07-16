@@ -20,15 +20,15 @@
 // The shell cache keeps "landmark" resources, like CSS and JS, web fonts, etc.
 // which won't change between content updates.
 // 
-const SHELL_CACHE = "shell-8.4.0--v1--sw/";
+const SHELL_CACHE = "shell-8.4.0--v1--sw/hydejack/";
 
 // A separate assets cache that won't be invalidated when there's a newer version of Hydejack.
 // NOTE: Whenever you make changes to any of the files in yor `assets` folder,
 //       increase the cache number, otherwise the changes will NEVER be visible to returning visitors.
-const ASSETS_CACHE = "assets--v1--sw/";
+const ASSETS_CACHE = "assets--v1--sw/hydejack/";
 
 // The cache for regular content, which will be invalidated every time you make a new build.
-const CONTENT_CACHE = "content--2019-07-16T12:48:28+00:00--sw/";
+const CONTENT_CACHE = "content--2019-07-16T12:51:18+00:00--sw/hydejack/";
 
 // A URL search parameter you can add to external assets to cache them in the service worker.
 const CACHE_SEARCH_PARAM = "sw-cache";
@@ -40,7 +40,7 @@ const RAND_SEARCH_PARAM = "rand";
 // The regular expression used to find URLs in webfont style sheets.
 const RE = /url\(['"]?(.*?)['"]?\)/gi;
 
-const ICON_FONT = "/assets/icomoon/style.css";
+const ICON_FONT = "/hydejack/assets/icomoon/style.css";
 
 // 
 // 
@@ -49,29 +49,29 @@ const GOOGLE_FONTS = "https://fonts.googleapis.com/css?family=Roboto+Slab:400%7C
 // 
 
 const SHELL_FILES = [
-  "/assets/bower_components/fontfaceobserver/fontfaceobserver.standalone.js",
-  "/assets/js/hydejack-8.4.0.js",
-  "/assets/css/hydejack-8.4.0.css",
-  "/assets/img/swipe.svg",
+  "/hydejack/assets/bower_components/fontfaceobserver/fontfaceobserver.standalone.js",
+  "/hydejack/assets/js/hydejack-8.4.0.js",
+  "/hydejack/assets/css/hydejack-8.4.0.css",
+  "/hydejack/assets/img/swipe.svg",
   ICON_FONT,
   /**/ GOOGLE_FONTS /**/,
 ];
 
 const ASSET_FILES = [
-  /**/ "/assets/img/sidebar-bg.jpg" /**/,
-  /**/ "/assets/icons/icon.png" /**/,
+  /**/ "/hydejack/assets/img/sidebar-bg.jpg" /**/,
+  /**/ "/hydejack/assets/icons/icon.png" /**/,
   /**/
 ];
 
 // Files we add on every service worker installation.
 const CONTENT_FILES = [
-  "/",
-  "/?utm_source=homescreen",
-  "/assets/manifest.json",
+  "/hydejack/",
+  "/hydejack/?utm_source=homescreen",
+  "/hydejack/assets/manifest.json",
   /**/
 ];
 
-const NOT_FOUND_PAGE = "/404.html";
+const NOT_FOUND_PAGE = "/hydejack/404.html";
 
 self.addEventListener("install", e => e.waitUntil(onInstall(e)));
 self.addEventListener("activate", e => e.waitUntil(onActivate(e)));
@@ -193,7 +193,7 @@ async function onInstall(e) {
 }
 
 function isSameSite({ origin, pathname }) {
-  return origin.startsWith("https://thrillerau.github.io") && pathname.startsWith("");
+  return origin.startsWith("https://thrillerau.github.io") && pathname.startsWith("/hydejack");
 }
 
 async function cacheResponse(cacheName, req, res) {
@@ -213,7 +213,7 @@ async function fromNetwork(e, request) {
   // TODO: always cache GET requests from other domains!? Only images?
   const hasSWParam = url.searchParams.has(CACHE_SEARCH_PARAM);
   if (isSameSite(url) || hasSWParam) {
-    const isAsset = url.pathname.startsWith("/assets");
+    const isAsset = url.pathname.startsWith("/hydejack/assets");
     const cacheName = isAsset || hasSWParam ? ASSETS_CACHE : CONTENT_CACHE;
     return fetchAndCache(e, request, cacheName);
   }
@@ -230,7 +230,7 @@ async function onActivate(e) {
   return Promise.all(
     keys
       // Only consider caches created by this baseurl, i.e. allow multiple Hydejack installations on same domain.
-      .filter(key => key.endsWith("sw/"))
+      .filter(key => key.endsWith("sw/hydejack/"))
       // Delete old caches
       .filter(key => key !== SHELL_CACHE && key !== ASSETS_CACHE && key !== CONTENT_CACHE)
       .map(key => caches.delete(key))
