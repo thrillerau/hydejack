@@ -1,5 +1,3 @@
----
----
 // Copyright (c) 2018 Florian Klampfer <https://qwtel.com/>
 //
 // This program is free software: you can redistribute it and/or modify
@@ -17,20 +15,20 @@
 
 // ⚡️ DANGER ZONE ⚡️
 // ================
-// {% if jekyll.environment == 'production' or site.hydejack.offline.development %}
+// 
 
 // The shell cache keeps "landmark" resources, like CSS and JS, web fonts, etc.
 // which won't change between content updates.
-// {% assign cv = site.hydejack.offline.cache_version | default:"1" %}
-const SHELL_CACHE = "shell-8.4.0--v{{ cv }}--sw{{ '/' | relative_url }}";
+// 
+const SHELL_CACHE = "shell-8.4.0--v1--sw/";
 
 // A separate assets cache that won't be invalidated when there's a newer version of Hydejack.
 // NOTE: Whenever you make changes to any of the files in yor `assets` folder,
 //       increase the cache number, otherwise the changes will NEVER be visible to returning visitors.
-const ASSETS_CACHE = "assets--v{{ cv }}--sw{{ '/' | relative_url }}";
+const ASSETS_CACHE = "assets--v1--sw/";
 
 // The cache for regular content, which will be invalidated every time you make a new build.
-const CONTENT_CACHE = "content--{{ site.time | date_to_xmlschema }}--sw{{ '/' | relative_url }}";
+const CONTENT_CACHE = "content--2019-07-16T12:48:28+00:00--sw/";
 
 // A URL search parameter you can add to external assets to cache them in the service worker.
 const CACHE_SEARCH_PARAM = "sw-cache";
@@ -42,40 +40,38 @@ const RAND_SEARCH_PARAM = "rand";
 // The regular expression used to find URLs in webfont style sheets.
 const RE = /url\(['"]?(.*?)['"]?\)/gi;
 
-const ICON_FONT = "{{ '/assets/icomoon/style.css' | relative_url }}";
+const ICON_FONT = "/assets/icomoon/style.css";
 
-// {% assign google_fonts = site.google_fonts | default:"Roboto+Slab:700|Noto+Sans:400,400i,700,700i" %}
-// {% unless site.hydejack.no_google_fonts or site.no_google_fonts %}
-// {% assign gf = true %}
-const GOOGLE_FONTS = "https://fonts.googleapis.com/css?family={{ google_fonts | uri_escape }}";
-// {% endunless %}
+// 
+// 
+// 
+const GOOGLE_FONTS = "https://fonts.googleapis.com/css?family=Roboto+Slab:400%7CNoto+Sans:400,400i,700,700i";
+// 
 
 const SHELL_FILES = [
-  "{{ '/assets/bower_components/fontfaceobserver/fontfaceobserver.standalone.js' | relative_url }}",
-  "{{ '/assets/js/hydejack-8.4.0.js' | relative_url }}",
-  "{{ '/assets/css/hydejack-8.4.0.css' | relative_url }}",
-  "{{ '/assets/img/swipe.svg' | relative_url }}",
+  "/assets/bower_components/fontfaceobserver/fontfaceobserver.standalone.js",
+  "/assets/js/hydejack-8.4.0.js",
+  "/assets/css/hydejack-8.4.0.css",
+  "/assets/img/swipe.svg",
   ICON_FONT,
-  /*{% if gf %}*/ GOOGLE_FONTS /*{% endif %}*/,
+  /**/ GOOGLE_FONTS /**/,
 ];
 
 const ASSET_FILES = [
-  /*{% if site.accent_image %}{% unless site.accent_image.background %}*/ "{% include smart-url.txt url=site.accent_image %}" /*{% endunless %}{% endif %}*/,
-  /*{% if site.logo %}*/ "{% include smart-url.txt url=site.logo %}" /*{% endif %}*/,
-  /*{% for file in site.hydejack.offline.precache_assets %}*/ "{% include smart-url.txt url=file %}",
-  /*{% endfor %}*/
+  /**/ "/assets/img/sidebar-bg.jpg" /**/,
+  /**/ "/assets/icons/icon.png" /**/,
+  /**/
 ];
 
 // Files we add on every service worker installation.
 const CONTENT_FILES = [
-  "{{ '/' | relative_url }}",
-  "{{ '/?utm_source=homescreen' | relative_url }}",
-  "{{ '/assets/manifest.json' | relative_url }}",
-  /*{% for legal in site.legal %}*/ "{% include smart-url.txt url=legal.href %}",
-  /*{% endfor %}*/
+  "/",
+  "/?utm_source=homescreen",
+  "/assets/manifest.json",
+  /**/
 ];
 
-const NOT_FOUND_PAGE = "{{ '/404.html' | relative_url }}";
+const NOT_FOUND_PAGE = "/404.html";
 
 self.addEventListener("install", e => e.waitUntil(onInstall(e)));
 self.addEventListener("activate", e => e.waitUntil(onActivate(e)));
@@ -154,7 +150,7 @@ async function cache404(cache) {
 async function cacheShell(cache) {
   const [iconFontFiles, googleFontsFiles] = await Promise.all([
     getIconFontFiles(),
-    /*{% if gf %}*/ getGoogleFontsFiles() /*{% endif %}*/,
+    /**/ getGoogleFontsFiles() /**/,
   ]);
 
   const urls = SHELL_FILES.concat(iconFontFiles, googleFontsFiles).filter(x => !!x);
@@ -197,7 +193,7 @@ async function onInstall(e) {
 }
 
 function isSameSite({ origin, pathname }) {
-  return origin.startsWith("{{ site.url }}") && pathname.startsWith("{{ site.baseurl }}");
+  return origin.startsWith("https://thrillerau.github.io") && pathname.startsWith("");
 }
 
 async function cacheResponse(cacheName, req, res) {
@@ -217,7 +213,7 @@ async function fromNetwork(e, request) {
   // TODO: always cache GET requests from other domains!? Only images?
   const hasSWParam = url.searchParams.has(CACHE_SEARCH_PARAM);
   if (isSameSite(url) || hasSWParam) {
-    const isAsset = url.pathname.startsWith("{{ 'assets' | relative_url }}");
+    const isAsset = url.pathname.startsWith("/assets");
     const cacheName = isAsset || hasSWParam ? ASSETS_CACHE : CONTENT_CACHE;
     return fetchAndCache(e, request, cacheName);
   }
@@ -234,7 +230,7 @@ async function onActivate(e) {
   return Promise.all(
     keys
       // Only consider caches created by this baseurl, i.e. allow multiple Hydejack installations on same domain.
-      .filter(key => key.endsWith("sw{{ '/' | relative_url }}"))
+      .filter(key => key.endsWith("sw/"))
       // Delete old caches
       .filter(key => key !== SHELL_CACHE && key !== ASSETS_CACHE && key !== CONTENT_CACHE)
       .map(key => caches.delete(key))
@@ -248,8 +244,7 @@ async function onFetch(e) {
   // ------
   // Go to network for non-GET request and Google Analytics right away.
   if (
-    request.method !== "GET" /*{% if site.google_analytics %}*/ ||
-    request.url.startsWith("https://www.google-analytics.com/collect") /*{% endif %}*/
+    request.method !== "GET" /**/
   ) {
     return fetch(request);
   }
@@ -280,39 +275,6 @@ async function onFetch(e) {
   }
 }
 
-// {% comment %}
-// TODO: We could add support for downloading the entire page.
-const ALL_ASSETS = [
-  /*{% for file in site.static_files %}*/ "{{ file.path | relative_url }}",
-  /*{% endfor %}*/
-];
+// 
 
-const ALL_DOCUMENTS = [
-  /*{% for doc in site.documents %}*/ "{{ doc.url | relative_url }}",
-  /*{% endfor %}*/
-];
-
-const ALL_PAGES = [
-  /*{% for doc in site.pages %}*/ "{{ doc.url | relative_url }}",
-  /*{% endfor %}*/
-];
-// {% endcomment %}
-
-// {% else %}
-
-self.addEventListener("activate", e => e.waitUntil(onDeactivate(e)));
-
-async function onDeactivate() {
-  await self.clients.claim();
-
-  const keys = await caches.keys();
-
-  return Promise.all(
-    keys
-      // Only consider caches created by this baseurl, i.e. allow multiple Hydejack installations on same domain.
-      .filter(key => key.endsWith("sw{{ '/' | relative_url }}"))
-      // Delete *all* caches
-      .map(key => caches.delete(key))
-  );
-}
-// {% endif %}
+// 
